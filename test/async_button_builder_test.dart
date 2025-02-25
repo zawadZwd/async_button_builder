@@ -68,8 +68,7 @@ void main() {
     );
 
     await tester.pumpWidget(textButton);
-    final button =
-        find.byType(TextButton).evaluate().first.widget as TextButton;
+    final button = find.byType(TextButton).evaluate().first.widget as TextButton;
 
     expect(
       () => button.onPressed!.call(),
@@ -91,12 +90,20 @@ void main() {
     final textButton = MaterialApp(
       home: NotificationListener<AsyncButtonNotification>(
         onNotification: (notification) {
-          notification.buttonState.when(
-            idle: () => idleCount += 1,
-            loading: () => loadingCount += 1,
-            success: () => successCount += 1,
-            error: (_, __) => errorCount += 1,
-          );
+          switch (notification.buttonState) {
+            case Idle():
+              idleCount += 1;
+              break;
+            case Loading():
+              loadingCount += 1;
+              break;
+            case Success():
+              successCount += 1;
+              break;
+            default:
+              errorCount += 1;
+              break;
+          }
 
           return true;
         },
@@ -116,8 +123,7 @@ void main() {
     );
 
     await tester.pumpWidget(textButton);
-    final button =
-        find.byType(TextButton).evaluate().first.widget as TextButton;
+    final button = find.byType(TextButton).evaluate().first.widget as TextButton;
 
     expect(
       () => button.onPressed!.call(),

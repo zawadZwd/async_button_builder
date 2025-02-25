@@ -249,8 +249,7 @@ class AsyncButtonBuilder extends StatefulWidget {
   State<AsyncButtonBuilder> createState() => _AsyncButtonBuilderState();
 }
 
-class _AsyncButtonBuilderState extends State<AsyncButtonBuilder>
-    with SingleTickerProviderStateMixin {
+class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> with SingleTickerProviderStateMixin {
   late ButtonState buttonState;
   Timer? timer;
 
@@ -327,42 +326,42 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder>
       // TODO: This duration is same as size's duration. That's okay right?
       duration: widget.duration,
       reverseDuration: widget.reverseDuration,
-      switchInCurve: buttonState.when(
-        idle: () => widget.idleSwitchInCurve,
-        loading: () => widget.loadingSwitchInCurve,
-        success: () => widget.successSwitchInCurve,
-        error: (_, __) => widget.errorSwitchInCurve,
-      ),
-      switchOutCurve: buttonState.when(
-        idle: () => widget.idleSwitchOutCurve,
-        loading: () => widget.loadingSwitchOutCurve,
-        success: () => widget.successSwitchOutCurve,
-        error: (_, __) => widget.errorSwitchOutCurve,
-      ),
-      transitionBuilder: buttonState.when(
-        idle: () => widget.idleTransitionBuilder,
-        loading: () => widget.loadingTransitionBuilder,
-        success: () => widget.successTransitionBuilder,
-        error: (_, __) => widget.errorTransitionBuilder,
-      ),
-      child: buttonState.when(
-        idle: () => KeyedSubtree(
-          key: ValueKey('__idle__$parentKeyValue'),
-          child: widget.child,
-        ),
-        loading: () => KeyedSubtree(
-          key: ValueKey('__loading__$parentKeyValue'),
-          child: loadingWidget,
-        ),
-        success: () => KeyedSubtree(
-          key: ValueKey('__success__$parentKeyValue'),
-          child: successWidget,
-        ),
-        error: (_, __) => KeyedSubtree(
-          key: ValueKey('__error__$parentKeyValue'),
-          child: errorWidget,
-        ),
-      ),
+      switchInCurve: switch (buttonState) {
+        ButtonState.idle => widget.idleSwitchInCurve,
+        ButtonState.loading => widget.loadingSwitchInCurve,
+        ButtonState.success => widget.successSwitchInCurve,
+        _ => widget.errorSwitchInCurve,
+      },
+      switchOutCurve: switch (buttonState) {
+        ButtonState.idle => widget.idleSwitchOutCurve,
+        ButtonState.loading => widget.loadingSwitchOutCurve,
+        ButtonState.success => widget.successSwitchOutCurve,
+        _ => widget.errorSwitchOutCurve,
+      },
+      transitionBuilder: switch (buttonState) {
+        ButtonState.idle => widget.idleTransitionBuilder,
+        ButtonState.loading => widget.loadingTransitionBuilder,
+        ButtonState.success => widget.successTransitionBuilder,
+        _ => widget.errorTransitionBuilder,
+      },
+      child: switch (buttonState) {
+        ButtonState.idle => KeyedSubtree(
+            key: ValueKey('__idle__$parentKeyValue'),
+            child: widget.child,
+          ),
+        ButtonState.loading => KeyedSubtree(
+            key: ValueKey('__loading__$parentKeyValue'),
+            child: loadingWidget,
+          ),
+        ButtonState.success => KeyedSubtree(
+            key: ValueKey('__success__$parentKeyValue'),
+            child: successWidget,
+          ),
+        _ => KeyedSubtree(
+            key: ValueKey('__error__$parentKeyValue'),
+            child: errorWidget,
+          ),
+      },
     );
 
     return widget.builder(
@@ -382,88 +381,86 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder>
           : switcher,
       widget.disabled
           ? null
-          : onPressed == null
-              ? null
-              : buttonState.maybeWhen(
-                  idle: () => () {
-                    final completer = Completer<void>();
+          : switch (buttonState) {
+              ButtonState.idle => () {
+                  final completer = Completer<void>();
 
-                    // I might not want to set buttonState if we're being
-                    // driven by widget.buttonState...
-                    setState(() {
-                      buttonState = const ButtonState.loading();
-                    });
+                  // I might not want to set buttonState if we're being
+                  // driven by widget.buttonState...
+                  setState(() {
+                    buttonState = const ButtonState.loading();
+                  });
 
-                    if (widget.notifications) {
-                      const AsyncButtonNotification(
-                        buttonState: ButtonState.loading(),
-                      ).dispatch(context);
+                  if (widget.notifications) {
+                    const AsyncButtonNotification(
+                      buttonState: ButtonState.loading(),
+                    ).dispatch(context);
+                  }
+
+                  timer?.cancel();
+
+                  onPressed?.call().then((_) {
+                    completer.complete();
+
+                    if (mounted) {
+                      if (widget.showSuccess) {
+                        setState(() {
+                          buttonState = const ButtonState.success();
+                        });
+
+                        if (widget.notifications && context.mounted) {
+                          const AsyncButtonNotification(
+                            buttonState: ButtonState.success(),
+                          ).dispatch(context);
+                        }
+
+                        setTimer(widget.successDuration, widget.onSuccess);
+                      } else {
+                        setState(() {
+                          buttonState = const ButtonState.idle();
+                        });
+
+                        if (widget.notifications && context.mounted) {
+                          const AsyncButtonNotification(
+                            buttonState: ButtonState.idle(),
+                          ).dispatch(context);
+                        }
+                      }
                     }
+                  }).catchError((Object error, StackTrace stackTrace) {
+                    completer.completeError(error, stackTrace);
 
-                    timer?.cancel();
+                    if (mounted) {
+                      if (widget.showError) {
+                        setState(() {
+                          buttonState = ButtonState.error(error, stackTrace);
+                        });
 
-                    onPressed.call().then((_) {
-                      completer.complete();
+                        if (widget.notifications && context.mounted) {
+                          AsyncButtonNotification(
+                            buttonState: ButtonState.error(error, stackTrace),
+                          ).dispatch(context);
+                        }
 
-                      if (mounted) {
-                        if (widget.showSuccess) {
-                          setState(() {
-                            buttonState = const ButtonState.success();
-                          });
+                        setTimer(widget.errorDuration, widget.onError);
+                      } else {
+                        setState(() {
+                          buttonState = const ButtonState.idle();
+                        });
 
-                          if (widget.notifications) {
-                            const AsyncButtonNotification(
-                              buttonState: ButtonState.success(),
-                            ).dispatch(context);
-                          }
-
-                          setTimer(widget.successDuration, widget.onSuccess);
-                        } else {
-                          setState(() {
-                            buttonState = const ButtonState.idle();
-                          });
-
-                          if (widget.notifications) {
-                            const AsyncButtonNotification(
-                              buttonState: ButtonState.idle(),
-                            ).dispatch(context);
-                          }
+                        if (widget.notifications && context.mounted) {
+                          const AsyncButtonNotification(
+                            buttonState: ButtonState.idle(),
+                          ).dispatch(context);
                         }
                       }
-                    }).catchError((Object error, StackTrace stackTrace) {
-                      completer.completeError(error, stackTrace);
+                    }
+                  });
 
-                      if (mounted) {
-                        if (widget.showError) {
-                          setState(() {
-                            buttonState = ButtonState.error(error, stackTrace);
-                          });
-
-                          if (widget.notifications) {
-                            AsyncButtonNotification(
-                              buttonState: ButtonState.error(error, stackTrace),
-                            ).dispatch(context);
-                          }
-
-                          setTimer(widget.errorDuration, widget.onError);
-                        } else {
-                          setState(() {
-                            buttonState = const ButtonState.idle();
-                          });
-
-                          if (widget.notifications) {
-                            const AsyncButtonNotification(
-                              buttonState: ButtonState.idle(),
-                            ).dispatch(context);
-                          }
-                        }
-                      }
-                    });
-
-                    return completer.future;
-                  },
-                  orElse: () => null,
-                ),
+                  return completer.future;
+                },
+              _ => null,
+            },
       buttonState,
     );
   }
@@ -491,3 +488,18 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder>
     );
   }
 }
+
+
+/*
+
+buttonState.maybeWhen(
+              idle: () => () {
+                
+              },
+              orElse: () => null,
+            ),
+
+
+
+
+*/

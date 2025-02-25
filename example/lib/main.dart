@@ -82,12 +82,12 @@ class MyHomePage extends StatelessWidget {
                 // state
               },
               builder: (context, child, callback, buttonState) {
-                final buttonColor = buttonState.when(
-                  idle: () => Colors.yellow[200],
-                  loading: () => Colors.grey,
-                  success: () => Colors.orangeAccent,
-                  error: (_, __) => Colors.orange,
-                );
+                final buttonColor = switch (buttonState) {
+                  ButtonState.idle => Colors.yellow[200],
+                  ButtonState.loading => Colors.grey,
+                  ButtonState.success => Colors.orangeAccent,
+                  _ => Colors.orange,
+                };
 
                 return OutlinedButton(
                   onPressed: callback,
@@ -136,10 +136,8 @@ class MyHomePage extends StatelessWidget {
               },
               builder: (context, child, callback, state) {
                 return Material(
-                  color: state.maybeWhen(
-                    success: () => Colors.purple[100],
-                    orElse: () => Colors.blue,
-                  ),
+                  color: switch (state) { ButtonState.success => Colors.purple[100], _ => Colors.blue },
+
                   // This prevents the loading indicator showing below the
                   // button
                   clipBehavior: Clip.hardEdge,

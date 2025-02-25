@@ -29,9 +29,8 @@ part 'button_state.freezed.dart';
 ///   orElse: () => Colors.red,
 /// );
 /// ```
-/// {@end-tool}
 @freezed
-class ButtonState with _$ButtonState {
+sealed class ButtonState with _$ButtonState {
   const factory ButtonState.idle() = Idle;
   const factory ButtonState.loading() = Loading;
   const factory ButtonState.success() = Success;
