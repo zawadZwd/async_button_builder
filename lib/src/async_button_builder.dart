@@ -4,12 +4,7 @@ import 'package:async_button_builder/async_button_builder.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-typedef AsyncButtonBuilderCallback = Widget Function(
-  BuildContext context,
-  Widget child,
-  AsyncCallback? callback,
-  ButtonState buttonState,
-);
+typedef AsyncButtonBuilderCallback = Widget Function(BuildContext context, Widget child, AsyncCallback? callback, ButtonState buttonState);
 
 /// A `builder` that wraps a button providing disabled, loading, success and
 /// error states while retaining almost full access to the original Button's
@@ -207,7 +202,7 @@ class AsyncButtonBuilder extends StatefulWidget {
   final bool notifications;
 
   const AsyncButtonBuilder({
-    Key? key,
+    super.key,
     required this.child,
     required this.onPressed,
     required this.builder,
@@ -220,7 +215,7 @@ class AsyncButtonBuilder extends StatefulWidget {
     this.showError = true,
     this.errorPadding,
     this.successPadding,
-    this.buttonState = const ButtonState.idle(),
+    this.buttonState = const ButtonIdle(),
     this.duration = const Duration(milliseconds: 250),
     this.reverseDuration = const Duration(milliseconds: 250),
     this.disabled = false,
@@ -243,7 +238,7 @@ class AsyncButtonBuilder extends StatefulWidget {
     this.sizeAlignment = Alignment.center,
     this.animateSize = true,
     this.notifications = true,
-  }) : super(key: key);
+  });
 
   @override
   State<AsyncButtonBuilder> createState() => _AsyncButtonBuilderState();
@@ -280,22 +275,9 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> with SingleTick
     final theme = Theme.of(context);
     final onPressed = widget.onPressed;
     final widgetKey = widget.key;
-    final loadingWidget = widget.loadingWidget ??
-        const SizedBox(
-          height: 16.0,
-          width: 16.0,
-          child: CircularProgressIndicator(),
-        );
-    var successWidget = widget.successWidget ??
-        Icon(
-          Icons.check,
-          color: theme.colorScheme.secondary,
-        );
-    var errorWidget = widget.errorWidget ??
-        Icon(
-          Icons.error,
-          color: theme.colorScheme.error,
-        );
+    final loadingWidget = widget.loadingWidget ?? const SizedBox(height: 16.0, width: 16.0, child: CircularProgressIndicator());
+    var successWidget = widget.successWidget ?? Icon(Icons.check, color: theme.colorScheme.secondary);
+    var errorWidget = widget.errorWidget ?? Icon(Icons.error, color: theme.colorScheme.error);
     final successPadding = widget.successPadding;
     final errorPadding = widget.errorPadding;
 
@@ -309,17 +291,11 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> with SingleTick
     }
 
     if (successPadding != null) {
-      successWidget = Padding(
-        padding: successPadding,
-        child: successWidget,
-      );
+      successWidget = Padding(padding: successPadding, child: successWidget);
     }
 
     if (errorPadding != null) {
-      errorWidget = Padding(
-        padding: errorPadding,
-        child: errorWidget,
-      );
+      errorWidget = Padding(padding: errorPadding, child: errorWidget);
     }
 
     final switcher = AnimatedSwitcher(
@@ -327,40 +303,28 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> with SingleTick
       duration: widget.duration,
       reverseDuration: widget.reverseDuration,
       switchInCurve: switch (buttonState) {
-        ButtonState.idle => widget.idleSwitchInCurve,
-        ButtonState.loading => widget.loadingSwitchInCurve,
-        ButtonState.success => widget.successSwitchInCurve,
+        ButtonIdle() => widget.idleSwitchInCurve,
+        ButtonLoading() => widget.loadingSwitchInCurve,
+        ButtonSuccess() => widget.successSwitchInCurve,
         _ => widget.errorSwitchInCurve,
       },
       switchOutCurve: switch (buttonState) {
-        ButtonState.idle => widget.idleSwitchOutCurve,
-        ButtonState.loading => widget.loadingSwitchOutCurve,
-        ButtonState.success => widget.successSwitchOutCurve,
+        ButtonIdle() => widget.idleSwitchOutCurve,
+        ButtonLoading() => widget.loadingSwitchOutCurve,
+        ButtonSuccess() => widget.successSwitchOutCurve,
         _ => widget.errorSwitchOutCurve,
       },
       transitionBuilder: switch (buttonState) {
-        ButtonState.idle => widget.idleTransitionBuilder,
-        ButtonState.loading => widget.loadingTransitionBuilder,
-        ButtonState.success => widget.successTransitionBuilder,
+        ButtonIdle() => widget.idleTransitionBuilder,
+        ButtonLoading() => widget.loadingTransitionBuilder,
+        ButtonSuccess() => widget.successTransitionBuilder,
         _ => widget.errorTransitionBuilder,
       },
       child: switch (buttonState) {
-        ButtonState.idle => KeyedSubtree(
-            key: ValueKey('__idle__$parentKeyValue'),
-            child: widget.child,
-          ),
-        ButtonState.loading => KeyedSubtree(
-            key: ValueKey('__loading__$parentKeyValue'),
-            child: loadingWidget,
-          ),
-        ButtonState.success => KeyedSubtree(
-            key: ValueKey('__success__$parentKeyValue'),
-            child: successWidget,
-          ),
-        _ => KeyedSubtree(
-            key: ValueKey('__error__$parentKeyValue'),
-            child: errorWidget,
-          ),
+        ButtonIdle() => KeyedSubtree(key: ValueKey('__idle__$parentKeyValue'), child: widget.child),
+        ButtonLoading() => KeyedSubtree(key: ValueKey('__loading__$parentKeyValue'), child: loadingWidget),
+        ButtonSuccess() => KeyedSubtree(key: ValueKey('__success__$parentKeyValue'), child: successWidget),
+        _ => KeyedSubtree(key: ValueKey('__error__$parentKeyValue'), child: errorWidget),
       },
     );
 
@@ -371,135 +335,108 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> with SingleTick
       // to figure out how to reproduce the exact behaviour of AnimatedSize
       widget.animateSize
           ? AnimatedSize(
-              duration: widget.duration,
-              reverseDuration: widget.reverseDuration,
-              alignment: widget.sizeAlignment,
-              clipBehavior: widget.sizeClipBehavior,
-              curve: widget.sizeCurve,
-              child: switcher,
-            )
+            duration: widget.duration,
+            reverseDuration: widget.reverseDuration,
+            alignment: widget.sizeAlignment,
+            clipBehavior: widget.sizeClipBehavior,
+            curve: widget.sizeCurve,
+            child: switcher,
+          )
           : switcher,
       widget.disabled
           ? null
           : switch (buttonState) {
-              ButtonState.idle => () {
-                  final completer = Completer<void>();
+            ButtonIdle() => () {
+              final completer = Completer<void>();
 
-                  // I might not want to set buttonState if we're being
-                  // driven by widget.buttonState...
-                  setState(() {
-                    buttonState = const ButtonState.loading();
-                  });
+              // I might not want to set buttonState if we're being
+              // driven by widget.buttonState...
+              setState(() {
+                buttonState = const ButtonLoading();
+              });
 
-                  if (widget.notifications) {
-                    const AsyncButtonNotification(
-                      buttonState: ButtonState.loading(),
-                    ).dispatch(context);
-                  }
+              if (widget.notifications) {
+                const AsyncButtonNotification(buttonState: ButtonLoading()).dispatch(context);
+              }
 
-                  timer?.cancel();
+              timer?.cancel();
 
-                  onPressed?.call().then((_) {
+              onPressed
+                  ?.call()
+                  .then((_) {
                     completer.complete();
 
                     if (mounted) {
                       if (widget.showSuccess) {
                         setState(() {
-                          buttonState = const ButtonState.success();
+                          buttonState = const ButtonSuccess();
                         });
 
                         if (widget.notifications && context.mounted) {
-                          const AsyncButtonNotification(
-                            buttonState: ButtonState.success(),
-                          ).dispatch(context);
+                          const AsyncButtonNotification(buttonState: ButtonSuccess()).dispatch(context);
                         }
 
                         setTimer(widget.successDuration, widget.onSuccess);
                       } else {
                         setState(() {
-                          buttonState = const ButtonState.idle();
+                          buttonState = const ButtonIdle();
                         });
 
                         if (widget.notifications && context.mounted) {
-                          const AsyncButtonNotification(
-                            buttonState: ButtonState.idle(),
-                          ).dispatch(context);
+                          const AsyncButtonNotification(buttonState: ButtonIdle()).dispatch(context);
                         }
                       }
                     }
-                  }).catchError((Object error, StackTrace stackTrace) {
+                  })
+                  .catchError((Object error, StackTrace stackTrace) {
                     completer.completeError(error, stackTrace);
 
                     if (mounted) {
                       if (widget.showError) {
                         setState(() {
-                          buttonState = ButtonState.error(error, stackTrace);
+                          buttonState = ButtonError(error, stackTrace);
                         });
 
                         if (widget.notifications && context.mounted) {
-                          AsyncButtonNotification(
-                            buttonState: ButtonState.error(error, stackTrace),
-                          ).dispatch(context);
+                          AsyncButtonNotification(buttonState: ButtonError(error, stackTrace)).dispatch(context);
                         }
 
                         setTimer(widget.errorDuration, widget.onError);
                       } else {
                         setState(() {
-                          buttonState = const ButtonState.idle();
+                          buttonState = const ButtonIdle();
                         });
 
                         if (widget.notifications && context.mounted) {
-                          const AsyncButtonNotification(
-                            buttonState: ButtonState.idle(),
-                          ).dispatch(context);
+                          const AsyncButtonNotification(buttonState: ButtonIdle()).dispatch(context);
                         }
                       }
                     }
                   });
 
-                  return completer.future;
-                },
-              _ => null,
+              return completer.future;
             },
+            _ => null,
+          },
       buttonState,
     );
   }
 
   void setTimer(Duration duration, [VoidCallback? then]) {
-    timer = Timer(
-      duration,
-      () {
-        timer?.cancel();
+    timer = Timer(duration, () {
+      timer?.cancel();
 
-        then?.call();
+      then?.call();
 
-        if (mounted) {
-          setState(() {
-            buttonState = const ButtonState.idle();
-          });
+      if (mounted) {
+        setState(() {
+          buttonState = const ButtonIdle();
+        });
 
-          if (widget.notifications) {
-            const AsyncButtonNotification(
-              buttonState: ButtonState.idle(),
-            ).dispatch(context);
-          }
+        if (widget.notifications) {
+          const AsyncButtonNotification(buttonState: ButtonIdle()).dispatch(context);
         }
-      },
-    );
+      }
+    });
   }
 }
-
-
-/*
-
-buttonState.maybeWhen(
-              idle: () => () {
-                
-              },
-              orElse: () => null,
-            ),
-
-
-
-
-*/

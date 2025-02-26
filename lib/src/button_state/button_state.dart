@@ -1,39 +1,30 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 
-part 'button_state.freezed.dart';
+sealed class ButtonState extends Equatable {
+  const ButtonState();
 
-/// This union class represents the state of the button in either a [Idling],
-/// [Loading], [Success] or [Error] state. This can be considered a enum with extra
-/// utilities for ease of use.
-///
-/// {@tool snippet}
-///
-/// ```dart
-/// final buttonColor = buttonState.when(
-///   idle: () => Colors.pink,
-///   loading: () => Colors.blue,
-///   success: () => Colors.green,
-///   error: () => Colors.red,
-/// );
-/// ```
-/// {@end-tool}
-///
-/// You can also disregard other states and handle only those you'd like using
-/// the `.maybeWhen` syntax.
-///
-/// /// {@tool snippet}
-///
-/// ```dart
-/// final buttonColor = buttonState.maybeWhen(
-///   idle: () => Colors.pink,
-///   orElse: () => Colors.red,
-/// );
-/// ```
-@freezed
-sealed class ButtonState with _$ButtonState {
-  const factory ButtonState.idle() = Idle;
-  const factory ButtonState.loading() = Loading;
-  const factory ButtonState.success() = Success;
-  const factory ButtonState.error(Object error, [StackTrace? stackTrace]) =
-      Error;
+  @override
+  List<Object?> get props => [];
+}
+
+final class ButtonIdle extends ButtonState {
+  const ButtonIdle();
+}
+
+final class ButtonLoading extends ButtonState {
+  const ButtonLoading();
+}
+
+final class ButtonSuccess extends ButtonState {
+  const ButtonSuccess();
+}
+
+final class ButtonError extends ButtonState {
+  final Object error;
+  final StackTrace? stackTrace;
+
+  const ButtonError(this.error, [this.stackTrace]);
+
+  @override
+  List<Object?> get props => [error, stackTrace];
 }

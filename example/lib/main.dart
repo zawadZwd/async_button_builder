@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -83,9 +83,9 @@ class MyHomePage extends StatelessWidget {
               },
               builder: (context, child, callback, buttonState) {
                 final buttonColor = switch (buttonState) {
-                  ButtonState.idle => Colors.yellow[200],
-                  ButtonState.loading => Colors.grey,
-                  ButtonState.success => Colors.orangeAccent,
+                  ButtonIdle() => Colors.yellow[200],
+                  ButtonLoading() => Colors.grey,
+                  ButtonSuccess() => Colors.orangeAccent,
                   _ => Colors.orange,
                 };
 
@@ -136,7 +136,10 @@ class MyHomePage extends StatelessWidget {
               },
               builder: (context, child, callback, state) {
                 return Material(
-                  color: switch (state) { ButtonState.success => Colors.purple[100], _ => Colors.blue },
+                  color: switch (state) {
+                    ButtonSuccess() => Colors.purple[100],
+                    _ => Colors.blue,
+                  },
 
                   // This prevents the loading indicator showing below the
                   // button
