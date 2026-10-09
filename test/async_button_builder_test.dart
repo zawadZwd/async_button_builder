@@ -430,4 +430,108 @@ void main() {
     expect(find.text('loading'), findsOneWidget);
     expect(tester.widget<TextButton>(find.byType(TextButton)).onPressed, isNull);
   });
+
+  testWidgets('null onPressed nulls the callback', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        textAsyncButton(
+          onPressed: null,
+          child: const Text('click me'),
+        ),
+      ),
+    );
+
+    expect(tester.widget<TextButton>(find.byType(TextButton)).onPressed, isNull);
+    expect(find.text('click me'), findsOneWidget);
+  });
+
+  testWidgets('parent rebuild with equal non-const state keeps internal state', (tester) async {
+    ButtonState? lastState;
+    late StateSetter rebuildParent;
+
+    await tester.pumpWidget(
+      wrap(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuildParent = setState;
+            return textAsyncButton(
+              buttonState: ButtonIdle(),
+              loadingWidget: const Text('loading'),
+              onPressed: () async {
+                await Future<void>.delayed(const Duration(milliseconds: 200));
+              },
+              onState: (state) => lastState = state,
+              child: const Text('click me'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(TextButton));
+    await tester.pump();
+    expect(lastState, isA<ButtonLoading>());
+
+    rebuildParent(() {});
+    await tester.pump();
+
+    expect(lastState, isA<ButtonLoading>());
+    expect(tester.widget<TextButton>(find.byType(TextButton)).onPressed, isNull);
+
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('changing controlled buttonState updates the button', (tester) async {
+    ButtonState controlled = const ButtonIdle();
+    late StateSetter rebuildParent;
+
+    await tester.pumpWidget(
+      wrap(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuildParent = setState;
+            return textAsyncButton(
+              buttonState: controlled,
+              successWidget: const Text('success'),
+              onPressed: () async {},
+              child: const Text('click me'),
+            );
+          },
+        ),
+      ),
+    );
+
+    expect(find.text('click me'), findsOneWidget);
+
+    rebuildParent(() => controlled = const ButtonSuccess());
+    await tester.pumpAndSettle();
+
+    expect(find.text('success'), findsOneWidget);
+    expect(find.text('click me'), findsNothing);
+  });
+
+  group('ButtonState equality', () {
+    test('non-const instances of the same state are equal', () {
+      expect(ButtonIdle(), ButtonIdle());
+      expect(ButtonLoading(), ButtonLoading());
+      expect(ButtonSuccess(), ButtonSuccess());
+      expect(ButtonIdle().hashCode, ButtonIdle().hashCode);
+    });
+
+    test('different states are not equal', () {
+      expect(ButtonIdle(), isNot(ButtonLoading()));
+      expect(ButtonLoading(), isNot(ButtonSuccess()));
+      expect(ButtonSuccess(), isNot(ButtonError('x')));
+    });
+
+    test('ButtonError compares error and stackTrace', () {
+      final error = ArgumentError('boom');
+      final stackTrace = StackTrace.current;
+
+      expect(ButtonError(error, stackTrace), ButtonError(error, stackTrace));
+      expect(ButtonError(error, stackTrace).hashCode, ButtonError(error, stackTrace).hashCode);
+      expect(ButtonError(error), isNot(ButtonError(ArgumentError('other'))));
+      expect(ButtonError(error, stackTrace), isNot(ButtonError(error)));
+    });
+  });
 }
