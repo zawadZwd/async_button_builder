@@ -11,42 +11,33 @@ typedef AsyncButtonBuilderCallback = Widget Function(BuildContext context, Widge
 /// API. This is useful for any long running operations and helps better
 /// improve UX.
 ///
-/// {@tool dartpad --template=stateful_widget_material}
-///
 /// ```dart
+/// AsyncButtonBuilder(
+///   loadingWidget: const Text('Loading...'),
+///   onPressed: () async {
+///     await Future<void>.delayed(const Duration(seconds: 1));
+///     throw StateError('yikes');
+///   },
+///   builder: (context, child, callback, buttonState) {
+///     final buttonColor = switch (buttonState) {
+///       ButtonIdle() => Colors.yellow[200],
+///       ButtonLoading() => Colors.grey,
+///       ButtonSuccess() => Colors.orangeAccent,
+///       ButtonError() => Colors.orange,
+///     };
 ///
-/// @override
-/// Widget build(BuildContext context) {
-///   return AsyncButtonBuilder(
-///     child: Text('Click Me'),
-///     loadingWidget: Text('Loading...'),
-///     onPressed: () async {
-///       await Future.delayed(Duration(seconds: 1));
-///
-///       throw 'yikes';
-///     },
-///     builder: (context, child, callback, buttonState) {
-///       final buttonColor = switch (buttonState) {
-///         ButtonIdle() => Colors.yellow[200],
-///         ButtonLoading() => Colors.grey,
-///         ButtonSuccess() => Colors.orangeAccent,
-///         ButtonError() => Colors.orange,
-///       };
-///
-///       return OutlinedButton(
-///         child: child,
-///         onPressed: callback,
-///         style: OutlinedButton.styleFrom(
-///           primary: Colors.black,
-///           backgroundColor: buttonColor,
-///         ),
-///       );
-///     },
-///   ),
-/// }
+///     return OutlinedButton(
+///       onPressed: callback,
+///       style: OutlinedButton.styleFrom(
+///         foregroundColor: Colors.black,
+///         backgroundColor: buttonColor,
+///       ),
+///       child: child,
+///     );
+///   },
+///   child: const Text('Click Me'),
+/// )
 /// ```
-/// {@end-tool}
-///
 class AsyncButtonBuilder extends StatefulWidget {
   /// This builder provides the widget's [BuildContext], the variable [child]
   /// based on button state as well as the [callback] that should be passed to
@@ -71,15 +62,19 @@ class AsyncButtonBuilder extends StatefulWidget {
   /// internal [AnimatedSize] and [TransitionBuilder].
   final Duration reverseDuration;
 
-  /// A callback that runs the async task. This is wrapped in order to begin
-  /// the button's internal `isLoading` before and after the operation
-  /// completes.
+  /// A callback that runs the async task. The button shows [ButtonLoading]
+  /// while the returned future is pending, then [ButtonSuccess] or
+  /// [ButtonError]. If null, the button is disabled.
   final AsyncCallback? onPressed;
 
-  /// A callback that runs [buttonState] changes to [ButtonState.success]
+  /// Called once [successDuration] has elapsed after [ButtonSuccess], right
+  /// before the button returns to [ButtonIdle]. Not called when
+  /// [showSuccess] is false.
   final VoidCallback? onSuccess;
 
-  /// A callback that runs [buttonState] changes to [ButtonState.error]
+  /// Called once [errorDuration] has elapsed after [ButtonError], right
+  /// before the button returns to [ButtonIdle]. Not called when [showError]
+  /// is false.
   final VoidCallback? onError;
 
   /// This is used to manually drive the state of the loading button thus
@@ -105,8 +100,8 @@ class AsyncButtonBuilder extends StatefulWidget {
   ///
   /// Icon(
   ///   Icons.check,
-  ///   color: Theme.of(context).accentColor,
-  /// );
+  ///   color: Theme.of(context).colorScheme.secondary,
+  /// )
   final Widget? successWidget;
 
   /// The widget used to replace the [child] when the button is in a error
@@ -114,7 +109,7 @@ class AsyncButtonBuilder extends StatefulWidget {
   ///
   /// Icon(
   ///   Icons.error,
-  ///   color: Theme.of(context).errorColor,
+  ///   color: Theme.of(context).colorScheme.error,
   /// )
   final Widget? errorWidget;
 

@@ -1,7 +1,20 @@
-## [3.0.0+1] - 2022-02-13
+## [3.2.0] - Unreleased
+- Removed the `equatable` dependency. `ButtonState` subclasses now implement `==` and `hashCode` themselves, so states compare by value (e.g. `ButtonIdle() == ButtonIdle()`, `ButtonError(e, st) == ButtonError(e, st)`). This keeps a parent passing a non-const `buttonState` from resetting a button that is mid-press.
+- Fix: a null `onPressed` disables the button again (passes a null `callback` to `builder`). Since 3.1.0 such a button got stuck in the loading state when pressed.
+- Updated README and API docs to the current Flutter and Dart APIs: `switch` on `ButtonState` instead of `.when()`/`.maybeWhen()`, `foregroundColor` instead of the removed `primary` in `styleFrom`, `ColorScheme` instead of `accentColor`/`errorColor`.
+- Clarified that `onSuccess`/`onError` are called after `successDuration`/`errorDuration`, and not at all when `showSuccess`/`showError` is false.
+- `button_state.dart` moved from `lib/src/button_state/` to `lib/src/`. Import `package:async_button_builder/async_button_builder.dart` rather than `src/` paths.
+- Tooling: replaced the removed `strong-mode` analyzer options with `strict-casts`, `strict-inference` and `strict-raw-types`, set the formatter page width to 160, and switched CI from `flutter format` to `dart format`.
+
+## [3.1.0] - 2025-02-26
+- **Breaking:** `ButtonState` is now a Dart 3 sealed class instead of a `freezed` union. Use `ButtonIdle`, `ButtonLoading`, `ButtonSuccess` and `ButtonError(error, [stackTrace])` with `switch` instead of `ButtonState.idle()`/`.when()`/`.maybeWhen()`.
+- Removed the `freezed`, `freezed_annotation` and `build_runner` dependencies; value equality is provided by `equatable`.
+- Minimum Dart SDK raised to 3.7.0.
+
+## [3.0.0+1] - 2023-02-13
 - Fix `Undefined name 'optionalTypeArgs'.` Also adds back the hard dep on freezed_annotation.
 
-## [3.0.0] - 2022-02-13
+## [3.0.0] - 2023-02-13
 - Added notification functionality. The error variant now passes through the error and stacktrace which would be needed for a notification to be useful. This is a breaking change as the error widget now takes an error and stacktrace as arguments.
 
 ## [2.3.0+2] - 2023-02-13

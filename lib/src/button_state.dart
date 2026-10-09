@@ -1,3 +1,14 @@
+/// The state of an `AsyncButtonBuilder`: [ButtonIdle], [ButtonLoading],
+/// [ButtonSuccess] or [ButtonError].
+///
+/// ```dart
+/// final color = switch (buttonState) {
+///   ButtonIdle() => Colors.pink,
+///   ButtonLoading() => Colors.blue,
+///   ButtonSuccess() => Colors.green,
+///   ButtonError() => Colors.red,
+/// };
+/// ```
 sealed class ButtonState {
   const ButtonState();
 }
