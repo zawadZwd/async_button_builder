@@ -1,10 +1,7 @@
-import 'package:equatable/equatable.dart';
+// import 'package:equatable/equatable.dart';
 
-sealed class ButtonState extends Equatable {
+sealed class ButtonState {
   const ButtonState();
-
-  @override
-  List<Object?> get props => [];
 }
 
 final class ButtonIdle extends ButtonState {
@@ -24,7 +21,4 @@ final class ButtonError extends ButtonState {
   final StackTrace? stackTrace;
 
   const ButtonError(this.error, [this.stackTrace]);
-
-  @override
-  List<Object?> get props => [error, stackTrace];
 }
