@@ -13,13 +13,13 @@ Run all commands from the repo root unless noted.
 ```bash
 flutter pub get                              # install deps
 flutter analyze                              # static analysis (uses analysis_options.yaml)
-flutter format --set-exit-if-changed .       # CI's formatting check
+dart format --output=none --set-exit-if-changed lib test  # CI's formatting check (page width 160, set in analysis_options.yaml)
 flutter test                                 # run all tests
 flutter test test/async_button_builder_test.dart                  # run the single test file
 flutter test test/async_button_builder_test.dart --plain-name "some test name"  # run one test by name
 ```
 
-CI (`.github/workflows/dart.yaml`) runs, in order: `flutter pub get` → format check → `flutter analyze` → `flutter test`. Match this locally before considering work done.
+CI (`.github/workflows/dart.yaml`) runs, in order: `flutter pub get` → format check → `flutter analyze` → `flutter analyze` in `example/` → `flutter test`. Match this locally before considering work done.
 
 The `example/` app has its own `pubspec.yaml`/deps; run `flutter pub get` inside `example/` if working on it.
 
@@ -27,7 +27,7 @@ The `example/` app has its own `pubspec.yaml`/deps; run `flutter pub get` inside
 
 The package is intentionally small — three files under `lib/src/`, all re-exported from `lib/async_button_builder.dart`:
 
-- **`button_state.dart`** — `ButtonState` is a sealed class with four variants: `ButtonIdle`, `ButtonLoading`, `ButtonSuccess`, `ButtonError(error, [stackTrace])`. Consumers pattern-match with Dart's `switch` (no `freezed`/`equatable` dependency — both were tried and removed; see CHANGELOG and git log for history. Don't reintroduce either without checking why they were dropped).
+- **`button_state.dart`** — `ButtonState` is a sealed class with four variants: `ButtonIdle`, `ButtonLoading`, `ButtonSuccess`, `ButtonError(error, [stackTrace])`. Consumers pattern-match with Dart's `switch` (no `freezed`/`equatable` dependency — both were tried and removed). Each subclass implements `==`/`hashCode` by hand; this value equality is load-bearing, because `didUpdateWidget` compares old and new `buttonState` and identity comparison would reset an in-flight button whenever a parent rebuilds with a non-const state.
 - **`async_button_builder.dart`** — `AsyncButtonBuilder` (StatefulWidget) is the core. It does **not** render a button itself; it calls `widget.builder(context, child, callback, buttonState)` and the caller supplies the actual button (`TextButton`, `IconButton`, custom widget, etc.). Key internal flow:
   - `_handlePressed` drives the state machine: emits `ButtonLoading`, awaits `widget.onPressed()`, then emits `ButtonSuccess`/`ButtonError` via `_showOutcome`, which auto-resets to `ButtonIdle` after `successDuration`/`errorDuration` using an internal `Timer` (`_resetAfter`).
   - `_phase()` maps the current `ButtonState` to the curve/transition/child to feed an `AnimatedSwitcher`, optionally wrapped in `AnimatedSize` (`widget.animateSize`). Per-state switch-in/switch-out curves and transition builders are all separately overridable (`idle*`, `loading*`, `success*`, `error*` fields).
@@ -40,4 +40,4 @@ When changing state-transition logic, check both the widget test file (`test/asy
 
 ## Linting
 
-`analysis_options.yaml` enables several stricter-than-default lints beyond `flutter_lints`: `implicit-casts`/`implicit-dynamic` disabled, `require_trailing_commas`, `always_use_package_imports`, `always_declare_return_types`, `avoid_void_async`, among others. Follow these in new code rather than relying on default Flutter lint behavior.
+`analysis_options.yaml` enables several stricter-than-default lints beyond `flutter_lints`: `strict-casts`/`strict-inference`/`strict-raw-types`, `require_trailing_commas`, `always_use_package_imports`, `always_declare_return_types`, `avoid_void_async`, among others. Follow these in new code rather than relying on default Flutter lint behavior.

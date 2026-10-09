@@ -52,11 +52,12 @@ Widget textAsyncButton({
     builder: (_, buttonChild, callback, state) {
       onState?.call(state);
       return TextButton(
-        onPressed: callback == null
-            ? null
-            : () {
-                callback().ignore();
-              },
+        onPressed:
+            callback == null
+                ? null
+                : () {
+                  callback().ignore();
+                },
         child: buttonChild,
       );
     },
