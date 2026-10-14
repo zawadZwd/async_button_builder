@@ -364,7 +364,10 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> {
           _showOutcome(show: widget.showSuccess, outcome: const ButtonSuccess(), duration: widget.successDuration, onFinished: widget.onSuccess);
         })
         .catchError((Object error, StackTrace stackTrace) {
-          completer.completeError(error, stackTrace);
+          // The error is surfaced as ButtonError (and via onError), so complete
+          // normally: buttons discard this future, and completing with an error
+          // would raise an unhandled exception in the zone.
+          completer.complete();
           if (!mounted) return;
 
           _showOutcome(show: widget.showError, outcome: ButtonError(error, stackTrace), duration: widget.errorDuration, onFinished: widget.onError);
