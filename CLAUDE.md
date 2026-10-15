@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `async_button_builder` is a Flutter package (not an app) that wraps any button widget with async-aware idle/loading/success/error states, animated transitions between them, and optional notification bubbling. The package has no backend, no app entry point of its own — `example/` is a demo app that consumes the published API like a real user would.
 
+Material widgets come from the standalone `material_ui` package (`package:material_ui/material_ui.dart`), not `package:flutter/material.dart`. Do not reintroduce `flutter/material.dart` imports: its `ThemeData` is a different type, so mixing the two breaks theme lookup. Minimum is Flutter 3.47 / Dart 3.13; CI pins the same Flutter version.
+
 ## Commands
 
 Run all commands from the repo root unless noted.

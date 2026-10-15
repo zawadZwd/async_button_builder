@@ -1,5 +1,5 @@
 import 'package:async_button_builder/async_button_builder.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() => runApp(const MyApp());
 
@@ -59,6 +59,7 @@ class MyHomePage extends StatelessWidget {
             const Divider(),
             const Text('Custom Outlined Button (Error):'),
             AsyncButtonBuilder(
+              showError: true,
               loadingWidget: const Text('Loading...'),
               onPressed: () async {
                 await Future.delayed(const Duration(seconds: 1));
@@ -114,6 +115,7 @@ class MyHomePage extends StatelessWidget {
                   ),
                 ),
               ),
+              showSuccess: true,
               successWidget: const Padding(
                 padding: EdgeInsets.all(4.0),
                 child: Icon(

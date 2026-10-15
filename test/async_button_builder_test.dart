@@ -1,12 +1,14 @@
 import 'package:async_button_builder/async_button_builder.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _duration = Duration(milliseconds: 50);
 
 Widget wrap(Widget child) {
-  return MaterialApp(home: Scaffold(body: Center(child: child)));
+  return MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  );
 }
 
 /// TextButton discards the returned Future, so errors from [AsyncCallback]
@@ -52,12 +54,11 @@ Widget textAsyncButton({
     builder: (_, buttonChild, callback, state) {
       onState?.call(state);
       return TextButton(
-        onPressed:
-            callback == null
-                ? null
-                : () {
-                  callback().ignore();
-                },
+        onPressed: callback == null
+            ? null
+            : () {
+                callback().ignore();
+              },
         child: buttonChild,
       );
     },

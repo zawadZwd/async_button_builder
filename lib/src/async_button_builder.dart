@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:async_button_builder/async_button_builder.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 typedef AsyncButtonBuilderCallback = Widget Function(BuildContext context, Widget child, AsyncCallback? callback, ButtonState buttonState);
 
@@ -48,7 +48,8 @@ class AsyncButtonBuilder extends StatefulWidget {
   /// [Icon]. For a [TextButton], a [Text].
   ///
   /// This child will be animated between for the [loadingWidget] or default
-  /// [CircularProgressIndicator] when the asynchronous [onPressed] is called.
+  /// [CircularProgressIndicator.adaptive] when the asynchronous [onPressed] is
+  /// called.
   /// The animation will take place over [duration].
   final Widget child;
 
@@ -89,11 +90,18 @@ class AsyncButtonBuilder extends StatefulWidget {
   /// If this is null the default widget is:
   ///
   /// SizedBox(
-  ///   height: 16.0,
-  ///   width: 16.0,
-  ///   child: CircularProgressIndicator(),
+  ///   height: loadingSize,
+  ///   width: loadingSize,
+  ///   child: CircularProgressIndicator.adaptive(),
   /// )
+  ///
+  /// The adaptive indicator is a [CupertinoActivityIndicator] when
+  /// [ThemeData.platform] is iOS or macOS, and a Material spinner otherwise.
   final Widget? loadingWidget;
+
+  /// The width and height of the default loading indicator. Defaults to 16.0.
+  /// Ignored when [loadingWidget] is set.
+  final double loadingSize;
 
   /// The widget used to replace the [child] when the button is in a success
   /// state. If this is null the default widget is:
@@ -113,10 +121,18 @@ class AsyncButtonBuilder extends StatefulWidget {
   /// )
   final Widget? errorWidget;
 
-  /// Whether to show the [successWidget] on success.
+  /// Whether to show the [successWidget] on success. Defaults to false.
+  ///
+  /// When false, a successful press goes straight back to [ButtonIdle]: the
+  /// button never reports [ButtonSuccess] (to [builder] or as an
+  /// [AsyncButtonNotification]) and [onSuccess] is not called.
   final bool showSuccess;
 
-  /// Whether to show the [errorWidget] on error.
+  /// Whether to show the [errorWidget] on error. Defaults to false.
+  ///
+  /// When false, a failed press goes straight back to [ButtonIdle]: the
+  /// button never reports [ButtonError] (to [builder] or as an
+  /// [AsyncButtonNotification]) and [onError] is not called.
   final bool showError;
 
   /// Optional [EdgeInsets] that will wrap around the [errorWidget]. This is a
@@ -204,10 +220,11 @@ class AsyncButtonBuilder extends StatefulWidget {
     this.onSuccess,
     this.onError,
     this.loadingWidget,
+    this.loadingSize = 16.0,
     this.successWidget,
     this.errorWidget,
-    this.showSuccess = true,
-    this.showError = true,
+    this.showSuccess = false,
+    this.showError = false,
     this.errorPadding,
     this.successPadding,
     this.buttonState = const ButtonIdle(),
@@ -295,10 +312,10 @@ class _AsyncButtonBuilderState extends State<AsyncButtonBuilder> {
   _Phase _phase(BuildContext context) {
     final theme = Theme.of(context);
     final parentKey = _parentKeyValue(widget.key);
-    final loadingChild = widget.loadingWidget ?? const SizedBox(height: 16.0, width: 16.0, child: CircularProgressIndicator());
+    final loadingChild =
+        widget.loadingWidget ?? SizedBox(height: widget.loadingSize, width: widget.loadingSize, child: const CircularProgressIndicator.adaptive());
     final successChild = _padded(widget.successPadding, widget.successWidget ?? Icon(Icons.check, color: theme.colorScheme.secondary));
     final errorChild = _padded(widget.errorPadding, widget.errorWidget ?? Icon(Icons.error, color: theme.colorScheme.error));
-
     return switch (buttonState) {
       ButtonIdle() => (
         switchInCurve: widget.idleSwitchInCurve,

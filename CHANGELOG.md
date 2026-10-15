@@ -1,3 +1,11 @@
+## [4.0.0] - Unreleased
+- **Breaking:** migrated from `package:flutter/material.dart` to the standalone [`material_ui`](https://pub.dev/packages/material_ui) package. Requires Flutter 3.47.0 and Dart 3.13.0 or newer.
+- Apps that still use `package:flutter/material.dart` should run `dart fix --apply --code=migrate_design_widgets`, or wrap their tree in `MaterialUiCompatibilityBridge`. Otherwise the default success and error icons use the default `ThemeData` colors instead of the app's.
+- `AsyncButtonNotification` now depends only on `package:flutter/widgets.dart`.
+- The default `loadingWidget` is now `CircularProgressIndicator.adaptive()`. When `ThemeData.platform` is iOS or macOS it shows a `CupertinoActivityIndicator` instead of the Material spinner. Pass your own `loadingWidget` to keep the old look.
+- **Breaking:** `showSuccess` and `showError` now default to `false`. A press goes straight from loading back to idle, so `ButtonSuccess`/`ButtonError` are not emitted (to `builder` or as notifications) and `onSuccess`/`onError` are not called unless you pass `showSuccess: true`/`showError: true`.
+- Added `loadingSize` to set the width and height of the default loading indicator (default `16.0`).
+
 ## [3.2.0] - Unreleased
 - Removed the `equatable` dependency. `ButtonState` subclasses now implement `==` and `hashCode` themselves, so states compare by value (e.g. `ButtonIdle() == ButtonIdle()`, `ButtonError(e, st) == ButtonError(e, st)`). This keeps a parent passing a non-const `buttonState` from resetting a button that is mid-press.
 - Fix: a null `onPressed` disables the button again (passes a null `callback` to `builder`). Since 3.1.0 such a button got stuck in the loading state when pressed.
